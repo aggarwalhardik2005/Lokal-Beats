@@ -307,6 +307,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    width: 80,
   },
   clearButtonText: {
     fontSize: 14,
