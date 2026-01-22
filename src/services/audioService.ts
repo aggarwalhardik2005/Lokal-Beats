@@ -1,14 +1,13 @@
-// services/audioService.ts - Updated
-
-import { Audio, AVPlaybackStatus } from 'expo-av';
-import { Song } from '../types';
-import * as FileSystem from 'expo-file-system';
-import { useMusicStore } from '../store/musicStore';
-import { addToRecentlyPlayed } from '../utils/storage';
+import { Audio, AVPlaybackStatus } from "expo-av";
+import * as FileSystem from "expo-file-system";
+import { useMusicStore } from "../store/musicStore";
+import { Song } from "../types";
+import { addToRecentlyPlayed } from "../utils/storage";
 
 class AudioService {
   private sound: Audio.Sound | null = null;
-  private onPlaybackStatusUpdate: ((status: AVPlaybackStatus) => void) | null = null;
+  private onPlaybackStatusUpdate: ((status: AVPlaybackStatus) => void) | null =
+    null;
 
   async initialize() {
     try {
@@ -20,30 +19,35 @@ class AudioService {
         playThroughEarpieceAndroid: false,
       });
 
-      // Set up default playback status update handler
       this.setupPlaybackStatusHandler();
-      
-      console.log('Audio service initialized successfully');
+
+      console.log("Audio service initialized successfully");
     } catch (error) {
-      console.error('Error initializing audio:', error);
+      console.error("Error initializing audio:", error);
     }
   }
 
   private setupPlaybackStatusHandler() {
     this.setOnPlaybackStatusUpdate((status) => {
       if (status.isLoaded) {
-        const { setIsPlaying, setPosition, setDuration, playNext, currentSong } = useMusicStore.getState();
-        
+        const {
+          setIsPlaying,
+          setPosition,
+          setDuration,
+          playNext,
+          currentSong,
+        } = useMusicStore.getState();
+
         // Update playing state
         setIsPlaying(status.isPlaying);
-        
+
         // Update position and duration
         setPosition(status.positionMillis);
         setDuration(status.durationMillis || 0);
-        
+
         // Auto-play next song when current finishes
         if (status.didJustFinish) {
-          console.log('Song finished, playing next...');
+          console.log("Song finished, playing next...");
           playNext();
           const nextSong = useMusicStore.getState().currentSong;
           if (nextSong && nextSong.id !== currentSong?.id) {
@@ -56,46 +60,40 @@ class AudioService {
 
   async loadAndPlay(song: Song) {
     try {
-      console.log('Loading song:', song.name);
-      
+      console.log("Loading song:", song.name);
+
       // Unload previous sound
       if (this.sound) {
         await this.sound.unloadAsync();
         this.sound = null;
       }
-
-      // Get the best quality URL
       const audioUrl = this.getBestQualityUrl(song);
-      
+
       if (!audioUrl) {
-        throw new Error('No audio URL available');
+        throw new Error("No audio URL available");
       }
 
-      console.log('Playing from URL:', audioUrl);
-
-      // Check if song is downloaded
+      console.log("Playing from URL:", audioUrl);
       const uri = song.localUri || audioUrl;
-
-      // Create and load new sound
       const { sound } = await Audio.Sound.createAsync(
         { uri },
         { shouldPlay: true },
-        this.onPlaybackStatusUpdate || undefined
+        this.onPlaybackStatusUpdate || undefined,
       );
 
       this.sound = sound;
       await sound.playAsync();
-      
+
       // Update store
       useMusicStore.getState().setCurrentSong(song);
       useMusicStore.getState().setIsPlaying(true);
-      
+
       // Add to recently played
       await addToRecentlyPlayed(song);
-      
-      console.log('Song loaded and playing successfully');
+
+      console.log("Song loaded and playing successfully");
     } catch (error) {
-      console.error('Error loading song:', error);
+      console.error("Error loading song:", error);
       useMusicStore.getState().setIsPlaying(false);
       throw error;
     }
@@ -158,16 +156,16 @@ class AudioService {
 
   private getBestQualityUrl(song: Song): string | null {
     const downloadUrls = song.downloadUrl;
-    
+
     if (!downloadUrls || downloadUrls.length === 0) {
       return null;
     }
 
     // Try to get 320kbps, then 160kbps, then any available
-    const qualities = ['320kbps', '160kbps', '96kbps', '48kbps', '12kbps'];
-    
+    const qualities = ["320kbps", "160kbps", "96kbps", "48kbps", "12kbps"];
+
     for (const quality of qualities) {
-      const url = downloadUrls.find(u => u.quality === quality);
+      const url = downloadUrls.find((u) => u.quality === quality);
       if (url) {
         return url.link || url.url || null;
       }
@@ -180,28 +178,31 @@ class AudioService {
   async downloadSong(song: Song): Promise<string> {
     try {
       const audioUrl = this.getBestQualityUrl(song);
-      
+
       if (!audioUrl) {
-        throw new Error('No audio URL available for download');
+        throw new Error("No audio URL available for download");
       }
 
-      const dir = (FileSystem as any).documentDirectory ?? (FileSystem as any).cacheDirectory ?? '';
+      const dir =
+        (FileSystem as any).documentDirectory ??
+        (FileSystem as any).cacheDirectory ??
+        "";
       const fileUri = dir + `${song.id}.mp4`;
-      
+
       const downloadResumable = FileSystem.createDownloadResumable(
         audioUrl,
-        fileUri
+        fileUri,
       );
 
       const result = await downloadResumable.downloadAsync();
-      
+
       if (!result) {
-        throw new Error('Download failed');
+        throw new Error("Download failed");
       }
 
       return result.uri;
     } catch (error) {
-      console.error('Error downloading song:', error);
+      console.error("Error downloading song:", error);
       throw error;
     }
   }
@@ -213,7 +214,7 @@ class AudioService {
         await FileSystem.deleteAsync(localUri);
       }
     } catch (error) {
-      console.error('Error deleting song:', error);
+      console.error("Error deleting song:", error);
     }
   }
 }

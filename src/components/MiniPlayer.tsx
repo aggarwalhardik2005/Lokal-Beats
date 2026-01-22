@@ -29,44 +29,41 @@ const useIsPlayerScreen = () => {
 
 export default function MiniPlayer() {
   const navigation = useNavigation<BottomTabNavigationProp<TabParamList>>();
-  const { currentSong, isPlaying, playNext } = useMusicStore();
+  const {
+    currentSong,
+    isPlaying,
+    playNext,
+    position,
+    duration,
+  } = useMusicStore();
+
   const [slideAnim] = useState(new Animated.Value(100));
   const [isPlayerScreen, setIsPlayerScreen] = useState(false);
 
-  // Listen to navigation state changes
+  // Listen to navigation changes
   useEffect(() => {
     const unsubscribe = navigation.addListener('state', () => {
       try {
         const state = navigation.getState();
         const currentRoute = state.routes[state.index];
         setIsPlayerScreen(currentRoute.name === 'Player');
-      } catch (error) {
-        // Ignore error if navigation state is not available yet
+      } catch {
         setIsPlayerScreen(false);
       }
     });
 
-    // Initial check
-    try {
-      const state = navigation.getState();
-      const currentRoute = state.routes[state.index];
-      setIsPlayerScreen(currentRoute.name === 'Player');
-    } catch (error) {
-      setIsPlayerScreen(false);
-    }
-
     return unsubscribe;
   }, [navigation]);
 
+  // Slide animation
   useEffect(() => {
-    // Hide MiniPlayer on Player screen or when no song is playing
     if (isPlayerScreen || !currentSong) {
       Animated.timing(slideAnim, {
         toValue: 100,
         duration: 200,
         useNativeDriver: true,
       }).start();
-    } else if (currentSong) {
+    } else {
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -75,7 +72,6 @@ export default function MiniPlayer() {
     }
   }, [currentSong, isPlayerScreen]);
 
-  // Don't render at all on Player screen
   if (isPlayerScreen || !currentSong) return null;
 
   const handlePlayPause = async (e: any) => {
@@ -97,34 +93,36 @@ export default function MiniPlayer() {
   };
 
   const getImageUrl = () => {
-    const image = currentSong.image.find(img => img.quality === '500x500') || currentSong.image[0];
+    const image =
+      currentSong.image.find(img => img.quality === '500x500') ||
+      currentSong.image[0];
     return image?.link || image?.url || '';
   };
 
-  // Get artist name from different possible fields
-  const artistName = currentSong.primaryArtists || 
-                    currentSong.artists?.primary?.map(a => a.name).join(', ') ||
-                    'Unknown Artist';
+  const artistName =
+    currentSong.primaryArtists ||
+    currentSong.artists?.primary?.map(a => a.name).join(', ') ||
+    'Unknown Artist';
+
+  // Progress calculation (SYNCED with PlayerScreen)
+  const progress =
+    duration && duration > 0 ? position / duration : 0;
 
   return (
     <Animated.View
       style={[
         styles.container,
-        { transform: [{ translateY: slideAnim }] }
+        { transform: [{ translateY: slideAnim }] },
       ]}
     >
+      {/* MiniPlayer Card */}
       <TouchableOpacity
         style={styles.content}
         onPress={() => navigation.navigate('Player')}
         activeOpacity={0.9}
       >
-        {/* Album Art */}
-        <Image
-          source={{ uri: getImageUrl() }}
-          style={styles.albumArt}
-        />
-        
-        {/* Song Info */}
+        <Image source={{ uri: getImageUrl() }} style={styles.albumArt} />
+
         <View style={styles.songInfo}>
           <Text style={styles.songName} numberOfLines={1}>
             {decodeHTMLEntities(currentSong.name || '')}
@@ -134,25 +132,40 @@ export default function MiniPlayer() {
           </Text>
         </View>
 
-        {/* Playback Controls */}
         <View style={styles.controls}>
-          <TouchableOpacity onPress={handlePlayPause} style={styles.controlButton}>
-            <Ionicons 
-              name={isPlaying ? 'pause' : 'play'} 
-              size={28} 
-              color="#fff" 
+          <TouchableOpacity
+            onPress={handlePlayPause}
+            style={styles.controlButton}
+          >
+            <Ionicons
+              name={isPlaying ? 'pause' : 'play'}
+              size={28}
+              color="#fff"
             />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleNext} style={styles.controlButton}>
-            <Ionicons 
-              name="play-skip-forward" 
-              size={28} 
-              color="#fff" 
+          <TouchableOpacity
+            onPress={handleNext}
+            style={styles.controlButton}
+          >
+            <Ionicons
+              name="play-skip-forward"
+              size={28}
+              color="#fff"
             />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
+
+      {/* 🔴 Progress Bar */}
+      <View style={styles.progressTrack}>
+        <View
+          style={[
+            styles.progressFill,
+            { width: `${progress * 100}%` },
+          ]}
+        />
+      </View>
     </Animated.View>
   );
 }
@@ -164,12 +177,13 @@ const styles = StyleSheet.create({
     left: '2%',
     right: '2%',
     backgroundColor: '#1a1a1a',
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
     elevation: 12,
-    borderRadius: 12,
+    overflow: 'hidden',
   },
   content: {
     flexDirection: 'row',
@@ -186,7 +200,6 @@ const styles = StyleSheet.create({
   songInfo: {
     flex: 1,
     marginRight: 12,
-    justifyContent: 'center',
   },
   songName: {
     fontSize: 16,
@@ -205,5 +218,16 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     padding: 4,
+  },
+
+  /* 🔴 Progress Bar Styles */
+  progressTrack: {
+    height: 3,
+    width: '100%',
+    backgroundColor: '#333',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#FF5252',
   },
 });
