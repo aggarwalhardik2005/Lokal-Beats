@@ -104,23 +104,11 @@ music-player/
 │   ├── components/          # Reusable UI components
 │   │   └── MiniPlayer.tsx   # Compact player component
 │   ├── constants/           # App constants
-│   │   ├── images.ts        # Image URIs
-│   │   ├── layout.ts        # Layout constants
-│   │   ├── playbackService.ts # Playback config
 │   │   └── tokens.ts        # Colors, fonts, spacing
 │   ├── helpers/             # Utility functions
 │   │   ├── filter.ts        # Data filtering utilities
 │   │   ├── miscellaneous.ts # Misc utilities
 │   │   └── types.ts         # Type definitions
-│   ├── hooks/               # Custom React hooks
-│   │   ├── useLastActiveTrack.tsx
-│   │   ├── useLogTrackPlayerState.tsx
-│   │   ├── useNavigationSearch.tsx
-│   │   ├── usePlayerBackground.tsx
-│   │   ├── useSetupTrackPlayer.tsx
-│   │   ├── useTrackPlayerFavorite.tsx
-│   │   ├── useTrackPlayerRepeatMode.tsx
-│   │   └── useTrackPlayerVolume.tsx
 │   ├── navigation/          # Navigation configuration
 │   │   └── AppNavigator.tsx # Bottom tab + stack navigation
 │   ├── screens/             # Screen components
@@ -132,9 +120,7 @@ music-player/
 │   │   ├── api.ts           # Saavn API integration
 │   │   └── audioService.ts  # Audio playback service
 │   ├── store/               # State management (Zustand)
-│   │   ├── library.tsx      # Library & favorites store
 │   │   ├── musicStore.ts    # Music playback store
-│   │   └── queue.tsx        # Queue management store
 │   ├── styles/              # Global styles
 │   │   └── index.ts         # Theme tokens
 │   ├── types/               # TypeScript type definitions
@@ -144,8 +130,6 @@ music-player/
 │       └── storage.ts       # AsyncStorage utilities
 ├── assets/
 │   ├── app_logo.png         # App icon
-│   └── data/
-│       └── library.json     # Sample library data
 ├── android/                 # Android native config
 ├── app.json                 # Expo configuration
 ├── package.json             # Dependencies
