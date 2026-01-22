@@ -66,7 +66,6 @@ A modern, feature-rich music streaming mobile application built with React Nativ
 
 ### Audio & Media
 
-- **React Native Track Player** 4.1.2 - Advanced audio playback
 - **Expo AV** 16.0.8 - Audio/video playback (fallback)
 - **Expo File System** 19.0.21 - Local file system access
 
